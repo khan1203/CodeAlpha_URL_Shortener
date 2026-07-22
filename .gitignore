@@ -1,0 +1,157 @@
+# =========================
+# Python
+# =========================
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Python build artifacts
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+
+# =========================
+# Virtual Environments
+# =========================
+
+.venv/
+venv/
+env/
+ENV/
+
+
+# =========================
+# uv (Python package manager)
+# =========================
+
+# uv cache
+.uv/
+
+# Keep uv.lock for reproducible installs
+# DO NOT ignore:
+# uv.lock
+
+
+# =========================
+# Environment Variables
+# =========================
+
+.env
+.env.*
+!.env.example
+
+
+# =========================
+# FastAPI
+# =========================
+
+# Local development files
+*.log
+
+# Database files (if using SQLite)
+*.db
+*.sqlite3
+
+
+# =========================
+# Testing
+# =========================
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+.tox/
+.nox/
+
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+
+# =========================
+# Jupyter
+# =========================
+
+.ipynb_checkpoints/
+
+
+# =========================
+# Docker
+# =========================
+
+# Docker compose overrides
+docker-compose.override.yml
+
+# Docker volumes
+.docker/
+
+# Docker build cache
+Dockerfile.local
+
+
+# =========================
+# IDEs
+# =========================
+
+# VS Code
+.vscode/
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+
+
+# =========================
+# OS Files
+# =========================
+
+.DS_Store
+Thumbs.db
+
+
+# =========================
+# Temporary Files
+# =========================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+
+
+# =========================
+# Secrets / Keys
+# =========================
+
+*.pem
+*.key
+*.crt
+
+secrets/
+credentials/
