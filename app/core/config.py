@@ -7,7 +7,6 @@ Using pydantic-settings gives us validation + type-casting for free.
 """
 
 from functools import lru_cache
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

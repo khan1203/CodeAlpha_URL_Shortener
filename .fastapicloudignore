@@ -1,0 +1,7 @@
+# Files here are NOT uploaded when running `fastapi deploy`, on top of
+# whatever .gitignore already excludes (venv, __pycache__, etc).
+# These are useful for local Docker-based development but aren't needed
+# by FastAPI Cloud, which builds directly from pyproject.toml/uv.lock.
+
+Dockerfile
+docker-compose.yml

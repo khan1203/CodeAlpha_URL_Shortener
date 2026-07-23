@@ -7,9 +7,7 @@ request.
 """
 
 import logging
-
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
-
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
