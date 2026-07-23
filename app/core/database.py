@@ -9,6 +9,7 @@ request.
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
 from app.core.config import settings
+import certifi
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ mongodb = MongoDB()
 async def connect_to_mongo() -> None:
     """Create the Motor client and verify connectivity."""
     logger.info("Connecting to MongoDB at %s", settings.mongo_uri)
-    mongodb.client = AsyncIOMotorClient(settings.mongo_uri)
+    mongodb.client = AsyncIOMotorClient(settings.mongo_uri, tlsCAFile=certifi.where())
     mongodb.db = mongodb.client[settings.mongo_db_name]
 
     # Fail fast if MongoDB is unreachable, instead of failing silently later.

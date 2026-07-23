@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # MongoDB
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_db_name: str = "url_shortener"
+    mongo_collection_name: str = "urls"
 
     # CORS
     allowed_origins: str = "*"

@@ -203,6 +203,88 @@ curl http://localhost:8000/api/v1/urls/aZ3kD9
 
 ---
 
+## MongoDB Atlas setup — full steps
+
+### 1. Create account
+Go to https://www.mongodb.com/cloud/atlas/register. Sign up (Google/email). Free, no card required for free tier.
+
+### 2. Create free cluster
+- Click **Create** / **Build a Database**
+- Select **M0 Free** tier
+- Provider: AWS/GCP/Azure — any, doesn't matter for this use case
+- Region: pick closest to where FastAPI Cloud runs your app (any is fine, latency difference is small)
+- Cluster name: default `Cluster0` works, or rename
+- Click **Create Deployment**
+
+### 3. Create database user
+Prompted automatically after cluster creation, or go to **Database Access** (left sidebar):
+- Click **Add New Database User**
+- Authentication Method: **Password**
+- Username: pick one, e.g. `url_shortener_app`
+- Password: click **Autogenerate Secure Password** and **copy it now** — shown once
+- Database User Privileges: **Read and write to any database**
+- Click **Add User**
+
+### 4. Network access — allow all IPs
+Go to **Network Access** (left sidebar):
+- Click **Add IP Address**
+- Click **Allow Access From Anywhere** (fills in `0.0.0.0/0`)
+- Click **Confirm**
+
+Required because FastAPI Cloud egress IPs aren't fixed/listable. Auth (step 3) still gates access — this only controls which IPs can attempt a connection.
+
+### 5. Get connection string
+- Go to **Database** (left sidebar) → click **Connect** on your cluster
+- Choose **Drivers**
+- Driver: **Python**, Version: **3.12 or later**
+- Copy the string shown, format:
+```
+mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+```
+- Replace `<username>` and `<password>` with values from step 3
+- If password has special characters (`@`, `:`, `/`, `%`), URL-encode them (e.g. `@` → `%40`)
+
+### 6. Set database name
+Connection string above doesn't specify a database name. Add it after the host, before the `?`:
+```
+mongodb+srv://url_shortener_app:yourpassword@cluster0.xxxxx.mongodb.net/url_shortener?retryWrites=true&w=majority&appName=Cluster0
+```
+This matches `MONGO_DB_NAME=url_shortener` from your `.env.example`. Database itself doesn't need pre-creation — MongoDB creates it on first write.
+
+### 7. Test connection locally before deploying
+```bash
+cd url-shortener
+cp .env.example .env
+```
+Edit `.env`, set:
+```
+MONGO_URI=mongodb+srv://url_shortener_app:yourpassword@cluster0.xxxxx.mongodb.net/url_shortener?retryWrites=true&w=majority&appName=Cluster0
+```
+Run:
+```bash
+uv run fastapi dev
+```
+Check terminal for `Successfully connected to MongoDB` log line (from `app/core/database.py`). If connection fails, error will show at startup — check password encoding and Network Access setting.
+
+### 8. Push same value to FastAPI Cloud
+```bash
+uv run fastapi cloud env set --secret MONGO_URI "mongodb+srv://url_shortener_app:yourpassword@cluster0.xxxxx.mongodb.net/url_shortener?retryWrites=true&w=majority&appName=Cluster0"
+```
+`--secret` flag encrypts it, hides value in dashboard after creation.
+
+Also set:
+```bash
+uv run fastapi cloud env set MONGO_DB_NAME "url_shortener"
+```
+(Redundant with database name in URI, but your `config.py` reads `MONGO_DB_NAME` separately — keep both in sync.)
+
+### 9. Delete local `.env` before committing
+```bash
+rm .env
+```
+Already gitignored, but don't paste real credentials into any file you might commit.
+
+---
 
 ## Deploying to FastAPI Cloud
 
@@ -262,22 +344,12 @@ https://url-shortener.fastapicloud.dev
 Your local `.env` file is never uploaded (it's git-ignored), so you need to
 set the same variables in FastAPI Cloud. Do this via the CLI:
 
-```bash
-# Non-sensitive
-uv run fastapi cloud env set MONGO_DB_NAME "url_shortener"
-uv run fastapi cloud env set SHORT_CODE_LENGTH "6"
-uv run fastapi cloud env set ALLOWED_ORIGINS "https://your-frontend.netlify.app"
+Manage secret/non-secret environment variables through the dashboard at
 
-# BASE_URL should be the URL FastAPI Cloud gave you after step 3
-uv run fastapi cloud env set BASE_URL "https://url-shortener.fastapicloud.dev"
+https://dashboard.fastapicloud.com
 
-# Sensitive - use --secret so it's encrypted and hidden in the dashboard
-uv run fastapi cloud env set --secret MONGO_URI "mongodb+srv://user:password@cluster0.xxxxx.mongodb.net"
-```
-
-You can also manage these through the dashboard at
-https://dashboard.fastapicloud.com under your app's **Environment
-Variables** tab.
+Click Your app (url-shortener-api) > **Environment
+Variables** tab > Import .env
 
 After setting/changing environment variables, redeploy so the app picks
 them up:
