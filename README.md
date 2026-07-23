@@ -200,3 +200,125 @@ curl http://localhost:8000/api/v1/urls/aZ3kD9
 - **Redirect status 307** (Temporary Redirect) is used instead of 301
   (Permanent) so that browsers/tools don't aggressively cache the redirect
   forever - useful if you ever want to change where a short code points.
+
+---
+
+
+## Deploying to FastAPI Cloud
+
+FastAPI Cloud (https://fastapicloud.com) is a managed hosting platform built
+by the FastAPI team. This project is already set up to work with it -
+`fastapi[standard]` is in the dependencies (this bundles the FastAPI Cloud
+CLI) and `app/main.py` exposes an `app` object, which is one of the
+standard locations FastAPI Cloud auto-detects.
+
+### 1. Prerequisite: a FastAPI Cloud account
+
+Sign up at https://fastapicloud.com if you haven't already. At the time of
+writing, new accounts may go through a short waitlist - the CLI will prompt
+you with a "Join the waiting list" option if so.
+
+### 2. Handle MongoDB first (important - read this before deploying)
+
+FastAPI Cloud hosts your FastAPI **application process only** - it does not
+run a MongoDB container alongside it the way `docker-compose.yml` does
+locally. You need a MongoDB instance reachable over the public internet.
+The easiest option is a free **MongoDB Atlas** cluster:
+
+1. Create a free cluster at https://www.mongodb.com/cloud/atlas
+2. Under **Network Access**, add `0.0.0.0/0` ("allow access from anywhere").
+   This is necessary because FastAPI Cloud's outbound IP addresses aren't
+   fixed/predictable, so you can't allowlist a specific IP. (Your database
+   still requires the username/password in the connection string - this
+   setting only controls which IPs are allowed to *attempt* a connection.)
+3. Under **Database Access**, create a database user and password.
+4. Copy the connection string Atlas gives you - it looks like:
+   `mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net`
+
+### 3. Log in and deploy
+
+From the project root:
+
+```bash
+uv run fastapi login
+```
+
+This opens your browser to authenticate.
+
+```bash
+uv run fastapi deploy
+```
+
+The CLI will package your code (respecting `.gitignore` and
+`.fastapicloudignore`), upload it, and build + deploy it. You'll get a URL
+like:
+
+```
+https://url-shortener.fastapicloud.dev
+```
+
+### 4. Set your real environment variables
+
+Your local `.env` file is never uploaded (it's git-ignored), so you need to
+set the same variables in FastAPI Cloud. Do this via the CLI:
+
+```bash
+# Non-sensitive
+uv run fastapi cloud env set MONGO_DB_NAME "url_shortener"
+uv run fastapi cloud env set SHORT_CODE_LENGTH "6"
+uv run fastapi cloud env set ALLOWED_ORIGINS "https://your-frontend.netlify.app"
+
+# BASE_URL should be the URL FastAPI Cloud gave you after step 3
+uv run fastapi cloud env set BASE_URL "https://url-shortener.fastapicloud.dev"
+
+# Sensitive - use --secret so it's encrypted and hidden in the dashboard
+uv run fastapi cloud env set --secret MONGO_URI "mongodb+srv://user:password@cluster0.xxxxx.mongodb.net"
+```
+
+You can also manage these through the dashboard at
+https://dashboard.fastapicloud.com under your app's **Environment
+Variables** tab.
+
+After setting/changing environment variables, redeploy so the app picks
+them up:
+
+```bash
+uv run fastapi deploy
+```
+
+### 5. Verify it's live
+
+```
+https://url-shortener.fastapicloud.dev/health
+https://url-shortener.fastapicloud.dev/docs
+```
+
+Check real-time logs any time from the dashboard: **Apps → your app →
+Logs**.
+
+### 6. Connect your frontend to it
+
+If you're using the Threadbox frontend from this same set of deliverables,
+update its `js/config.js`:
+
+```js
+const CONFIG = {
+  API_BASE_URL: "https://url-shortener.fastapicloud.dev",
+};
+```
+
+And make sure `ALLOWED_ORIGINS` (step 4 above) matches wherever you deploy
+that frontend - otherwise the browser will block the requests with a CORS
+error even though the API itself works fine.
+
+### Notes
+
+- You don't need `Dockerfile` or `docker-compose.yml` for FastAPI Cloud -
+  they're excluded via `.fastapicloudignore` and only needed for local
+  Docker-based development. Keep using them locally if you like; both
+  paths work off the same codebase.
+- `fastapi deploy` can be re-run any time you push changes - each run
+  redeploys the current code.
+- For automatic deploys on every git push, see FastAPI Cloud's GitHub
+  integration docs: https://fastapicloud.com/docs/source-control/github-integration
+
