@@ -35,7 +35,7 @@ url-shortener/
 │   │   └── logging.py       # Request logging middleware
 │   └── utils/
 │       └── shortcode.py     # Short code generator
-├── .env.example              # Template - copy to .env
+├── .env                     # Template - copy to .env
 ├── docker-compose.yml
 ├── Dockerfile
 └── pyproject.toml
